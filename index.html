@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <!-- CSS -->
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .wrapper {
+      display: flex;
+      max-width: 800px;
+      width: 100%;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      overflow: hidden;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .image-side {
+      flex: 1;
+      background: url(login_pic1.jpg) no-repeat center center;
+      background-size: cover;
+      animation: slideIn 1s ease-in-out;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(-100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .login-container {
+      flex: 1;
+      padding: 2rem;
+    }
+
+    form h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .form-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9em;
+      margin-bottom: 15px;
+    }
+
+    .form-options label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #333;
+    }
+
+    .form-options a {
+      color: #4c51bf;
+      text-decoration: none;
+    }
+
+    .form-options a:hover {
+      text-decoration: underline;
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #5a67d8;
+    }
+
+    .signup {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .signup a {
+      color: #6b46c1;
+      text-decoration: none;
+    }
+
+    .signup a:hover {
+      text-decoration: underline;
+    }
+
+    .error-msg {
+      color: red;
+      font-size: 0.9em;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .wrapper {
+        flex-direction: column;
+      }
+
+      .image-side {
+        height: 200px;
+        background-position: center;
+      }
+    }
+  </style>
+</head>
+<body>
+<!-- html code -->
+  <div class="wrapper">
+    <div class="image-side"></div>
+
+    <div class="login-container">
+      <form id="loginForm">
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Password" required />
+
+        <div class="form-options">
+          <label><input type="checkbox" id="rememberMe"> Remember Me</label>
+          <a href="#" onclick="forgotPassword()">Forgot?</a>
+        </div>
+
+        <button type="submit">Login</button>
+        <p class="signup">Don't have an account? <a href="signup.html">Sign Up</a></p>
+        <p class="error-msg" id="loginError"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+  <!-- Firebase Config + Logic -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBeJjoU3c7ztOxOeyQPt8h6tXRlLea2fkQ",
+      authDomain: "login-page-task1.firebaseapp.com",
+      projectId: "login-page-task1",
+      storageBucket: "login-page-task1.appspot.com",
+      messagingSenderId: "1009071307288",
+      appId: "1:1009071307288:web:e2f7f84a5b8bb35641216d"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const rememberMe = document.getElementById("rememberMe").checked;
+      const errorBox = document.getElementById("loginError");
+
+      errorBox.textContent = "";
+
+      const persistence = rememberMe
+        ? firebase.auth.Auth.Persistence.LOCAL
+        : firebase.auth.Auth.Persistence.SESSION;
+
+      auth.setPersistence(persistence)
+        .then(() => {
+          return auth.signInWithEmailAndPassword(email, password);
+        })
+        .then((userCredential) => {
+          alert("Login successful!");
+          console.log("Logged in:", userCredential.user.email);
+          
+        })
+        .catch((error) => {
+          errorBox.textContent = error.message;
+          console.error("Login Error:", error.message);
+        });
+    });
+
+    function forgotPassword() {
+      const email = document.getElementById("email").value.trim();
+      if (!email) {
+        alert("Enter your email to reset password.");
+        return;
+      }
+
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          alert("Password reset email sent!");
+        })
+        .catch((error) => {
+          alert("Error: " + error.message);
+        });
+    }
+  </script>
+
+</body>
+</html>
